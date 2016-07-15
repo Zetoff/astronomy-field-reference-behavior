@@ -1,6 +1,6 @@
 Package.describe({
   name: 'zetoff:astronomy-field-reference-behavior',
-  version: '0.0.1',
+  version: '0.1.0',
   summary: 'Adds a field to an astronomy class that references to another document.',
   git: '',
   documentation: 'README.md'
