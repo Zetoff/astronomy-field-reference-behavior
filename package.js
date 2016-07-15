@@ -16,6 +16,11 @@ Package.onUse(function(api) {
 
 Package.onTest(function(api) {
   api.use('ecmascript');
+  api.use('mongo');
+  api.use('practicalmeteor:mocha');
+  api.use('practicalmeteor:chai');
+  api.use('jagi:astronomy@2.0.1');
+  api.use('stevezhu:lodash@4.6.1')
   api.use('zetoff:astronomy-field-reference-behavior');
   api.mainModule('astronomy-field-reference-behavior-tests.js');
 });
