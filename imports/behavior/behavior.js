@@ -3,8 +3,8 @@ import { Class as AstroClass, Behavior, Validators } from 'meteor/jagi:astronomy
 
 import * as Constants from '../constants';
 
-function getReferencedDocument(astroClass, refId) {
-  return astroClass.findOne({
+function getReferencedDocument(collection, refId) {
+  return collection.findOne({
     _id: refId,
   });
 }
@@ -25,7 +25,7 @@ Behavior.create({
     optional: false,
     multiple: false,
     unique: true,
-    astroClass: null,
+    collection: null,
     validators: null,
   },
   createClassDefinition() {
@@ -42,7 +42,7 @@ Behavior.create({
       addMultipleMethod,
       removeSingleMethod,
       removeMultipleMethod,
-      astroClass,
+      collection,
       multiple,
       unique,
       validators,
@@ -86,7 +86,7 @@ Behavior.create({
         },
         [getSingleMethod](id) {
           check(id, String);
-          return getReferencedDocument(astroClass, id);
+          return getReferencedDocument(collection, id);
         },
         [getMultipleMethod](ids) {
           const doc = this;
@@ -95,7 +95,7 @@ Behavior.create({
               ids = [ids];
             }
           }
-          return astroClass.find({
+          return collection.find({
             _id: {
               '$in': (ids ? ids : doc[fieldName])
             }
@@ -153,7 +153,7 @@ Behavior.create({
         },
         [getSingleMethod]() {
           const doc = this;
-          return getReferencedDocument(astroClass, _.head(doc[fieldName]));
+          return getReferencedDocument(collection, _.head(doc[fieldName]));
         },
       })
     }
@@ -176,12 +176,12 @@ Behavior.create({
     if (this.options.multiple) {
       check(this.options.pluralName, String);
     }
+    if (this.options.astroClass) {
+      console.warn(`astronomy-field-reference-behavior: 'astroClass' option is deprecated, use 'collection' instead`);
+      this.options.collection = this.options.astroClass;
+    }
   },
   afterPrepareOptions() {
-    if (!AstroClass.isParentOf(this.options.astroClass)) {
-      throw new TypeError(`'fieldReference.astroClass' must be a ` +
-        `valid Astro.Class.`);
-    }
     check(this.options.validators, Array);
   },
   prepareOptions() {
@@ -198,20 +198,20 @@ Behavior.create({
     this._prepareValidators();
   },
   _prepareAstroClass() {
-    let { astroClass } = this.options;
-    if (_.isString(astroClass)) {
-      astroClass = AstroClass.get(astroClass);
+    let { collection } = this.options;
+    if (_.isString(collection)) {
+      collection = AstroClass.get(collection);
     }
-    this.options.astroClass = astroClass;
+    this.options.collection = collection;
   },
   _prepareValidators() {
     if (!_.isArray(this.options.validators)) {
       this.options.validators = [];
     }
-    const { multiple, validators, astroClass } = this.options;
+    const { multiple, validators, collection } = this.options;
     validators.unshift({
       type: Constants.REFERENCES_EXISTS_NAME,
-      param: astroClass,
+      param: collection,
     });
     if (!multiple) {
       validators.unshift({

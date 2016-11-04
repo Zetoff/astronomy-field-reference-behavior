@@ -19,7 +19,7 @@ module.exports = function() {
       fieldReference: [{
         singularName: 'parentCategory',
         optional: true,
-        astroClass: 'Category',
+        collection: 'Category',
       }],
     },
   });
