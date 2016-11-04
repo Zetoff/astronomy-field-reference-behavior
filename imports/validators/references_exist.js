@@ -23,7 +23,6 @@ export default Validator.create({
   resolveError({
     doc,
     name,
-    param: collection,
   }) {
     return `Could not assign ${doc.constructor.getName()}.${name} ` +
       `because no document was found with id '${this._refId}'.`;
