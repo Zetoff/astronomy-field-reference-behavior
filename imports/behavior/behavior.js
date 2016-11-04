@@ -176,6 +176,10 @@ Behavior.create({
     if (this.options.multiple) {
       check(this.options.pluralName, String);
     }
+    if (this.options.astroClass) {
+      console.warn(`astronomy-field-reference-behavior: 'astroClass' option is deprecated, use 'collection' instead`);
+      this.options.collection = this.options.astroClass;
+    }
   },
   afterPrepareOptions() {
     check(this.options.validators, Array);
