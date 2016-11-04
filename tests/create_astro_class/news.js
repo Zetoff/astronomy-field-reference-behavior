@@ -21,7 +21,7 @@ module.exports = function() {
         pluralName: 'categories',
         multiple: true,
         optional: true,
-        astroClass: 'Category',
+        collection: 'Category',
       }],
     },
   });

@@ -8,6 +8,8 @@ meteor add zetoff:astronomy-field-reference-behavior
 
 The `fieldReference` behavior adds a field that stores a document's id.
 
+## Options
+
 The `fieldReference` behavior comes with following options.
 
 ```js
@@ -26,7 +28,7 @@ behaviors: {
     optional: false,
     multiple: false,
     unique: true,
-    astroClass: null,
+    collection: null,
     validators: null,
   }
 }
@@ -46,5 +48,5 @@ A more detailed explanation:
 - ```optional {Boolean}```: determines whether the reference is mandatory or not.
 - ```multiple {Boolean}```: determines whether the reference is multiple or not.
 - ```unique {Boolean}```: indicates whether the references must be unique or can be repeated.
-- ```astroClass {String|Astro.Class}```: name or astronomy class where the referenced document is stored.
+- ```collection {String|*}```: collection or name of Astronomy class where the referenced document is stored.
 - ```validators {Array}```: accepts an array of validators like any field would.
