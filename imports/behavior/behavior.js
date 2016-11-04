@@ -178,10 +178,6 @@ Behavior.create({
     }
   },
   afterPrepareOptions() {
-    if (!AstroClass.isParentOf(this.options.astroClass)) {
-      throw new TypeError(`'fieldReference.astroClass' must be a ` +
-        `valid Astro.Class.`);
-    }
     check(this.options.validators, Array);
   },
   prepareOptions() {

@@ -4,12 +4,6 @@ import * as Constants from '../constants';
 
 export default Validator.create({
   name: Constants.REFERENCES_EXISTS_NAME,
-  parseParam(param) {
-    if (!AstroClass.isParentOf(param)) {
-      throw new TypeError(`'${Constants.REFERENCES_EXISTS_NAME}.param' must `+
-        `be a valid Astro.Class.`);
-    }
-  },
   isValid({
     value: refIds,
     param: collection
