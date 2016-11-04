@@ -12,7 +12,7 @@ export default Validator.create({
   },
   isValid({
     value: refIds,
-    param: astroClass
+    param: collection
   }) {
     if (!_.isArray(refIds)) {
       refIds = [refIds];
@@ -21,7 +21,7 @@ export default Validator.create({
       // store id. If document is not found _.every will stop and that
       // id will be available from resolveError method
       this._refId = refId;
-      return astroClass.findOne({
+      return collection.findOne({
         _id: refId,
       });
     });
@@ -29,9 +29,9 @@ export default Validator.create({
   resolveError({
     doc,
     name,
-    param: astroClass,
+    param: collection,
   }) {
     return `Could not assign ${doc.constructor.getName()}.${name} ` +
-      `because no ${astroClass.getName()} was found with id '${this._refId}'.`;
+      `because no document was found with id '${this._refId}'.`;
   }
 });
