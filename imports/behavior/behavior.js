@@ -208,11 +208,23 @@ Behavior.create({
     if (!_.isArray(this.options.validators)) {
       this.options.validators = [];
     }
-    const { multiple, validators, collection } = this.options;
+    const {
+      multiple,
+      optional,
+      validators,
+      collection,
+    } = this.options;
+
     validators.unshift({
       type: Constants.REFERENCES_EXISTS_NAME,
       param: collection,
     });
+    if (!optional) {
+      validators.unshift({
+        type: 'minLength',
+        param: 1,
+      });
+    }
     if (!multiple) {
       validators.unshift({
         type: 'maxLength',
