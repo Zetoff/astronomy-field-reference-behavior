@@ -15,13 +15,13 @@ Behavior.create({
     singularName: 'docRef',
     pluralName: 'docRefs',
     fieldName: null,
-    getSingleMethod: null,
-    getMultipleMethod: null,
-    setMethod: null,
-    addSingleMethod: null,
-    addMultipleMethod: null,
-    removeSingleMethod: null,
-    removeMultipleMethod: null,
+    getSingleHelper: null,
+    getMultipleHelper: null,
+    setHelper: null,
+    addSingleHelper: null,
+    addMultipleHelper: null,
+    removeSingleHelper: null,
+    removeMultipleHelper: null,
     optional: false,
     multiple: false,
     unique: true,
@@ -35,13 +35,13 @@ Behavior.create({
 
     const {
       fieldName,
-      getSingleMethod,
-      getMultipleMethod,
-      setMethod,
-      addSingleMethod,
-      addMultipleMethod,
-      removeSingleMethod,
-      removeMultipleMethod,
+      getSingleHelper,
+      getMultipleHelper,
+      setHelper,
+      addSingleHelper,
+      addMultipleHelper,
+      removeSingleHelper,
+      removeMultipleHelper,
       collection,
       multiple,
       unique,
@@ -70,9 +70,9 @@ Behavior.create({
     };
 
     if (multiple) {
-      // add methods
+      // add helpers
       Object.assign(definition.helpers, {
-        [setMethod](ids) {
+        [setHelper](ids) {
           const doc = this;
           if (!_.isArray(ids)) {
             ids = ids ? [ids] : undefined;
@@ -84,11 +84,11 @@ Behavior.create({
           }
           doc[fieldName] = ids;
         },
-        [getSingleMethod](id) {
+        [getSingleHelper](id) {
           check(id, String);
           return getReferencedDocument(collection, id);
         },
-        [getMultipleMethod](ids) {
+        [getMultipleHelper](ids) {
           const doc = this;
           if (ids) {
             if (!_.isArray(ids)) {
@@ -101,7 +101,7 @@ Behavior.create({
             }
           });
         },
-        [addSingleMethod](id) {
+        [addSingleHelper](id) {
           const doc = this;
           if (_.isObject(id)) {
             id = id._id;
@@ -115,14 +115,14 @@ Behavior.create({
             doc[fieldName].push(id);
           }
         },
-        [addMultipleMethod](ids) {
+        [addMultipleHelper](ids) {
           const doc = this;
           if (!_.isArray(ids)) {
             ids = [ids];
           }
-          _.forEach(ids, doc[addSingleMethod].bind(doc));
+          _.forEach(ids, doc[addSingleHelper].bind(doc));
         },
-        [removeSingleMethod](id) {
+        [removeSingleHelper](id) {
           const doc = this;
           if (_.isObject(id)) {
             id = id._id;
@@ -133,25 +133,25 @@ Behavior.create({
             });
           }
         },
-        [removeMultipleMethod](ids) {
+        [removeMultipleHelper](ids) {
           const doc = this;
           if (!_.isArray(ids)) {
             ids = [ids];
           }
-          _.forEach(ids, doc[removeSingleMethod].bind(doc));
+          _.forEach(ids, doc[removeSingleHelper].bind(doc));
         },
       });
     } else {
-      // add methods
+      // add helpers
       Object.assign(definition.helpers, {
-        [setMethod](id) {
+        [setHelper](id) {
           const doc = this;
           if (_.isObject(id)) {
             id = id._id;
           }
           doc[fieldName] = id ? [id] : undefined;
         },
-        [getSingleMethod]() {
+        [getSingleHelper]() {
           const doc = this;
           return getReferencedDocument(collection, _.head(doc[fieldName]));
         },
@@ -187,15 +187,18 @@ Behavior.create({
   prepareOptions() {
     const { singularName, pluralName, multiple } = this.options;
     this._prepareName('fieldName', multiple ? pluralName : singularName);
-    this._prepareMethodName('setMethod', 'set', multiple ? pluralName : singularName);
-    this._prepareMethodName('getSingleMethod', 'get', singularName);
-    this._prepareMethodName('getMultipleMethod', 'get', pluralName);
-    this._prepareMethodName('addSingleMethod', 'add', singularName);
-    this._prepareMethodName('addMultipleMethod', 'add', pluralName);
-    this._prepareMethodName('removeSingleMethod', 'remove', singularName);
-    this._prepareMethodName('removeMultipleMethod', 'remove', pluralName);
+    this._prepareHelperName('setHelper', 'set', multiple ? pluralName : singularName);
+    this._prepareHelperName('getSingleHelper', 'get', singularName);
+    this._prepareHelperName('getMultipleHelper', 'get', pluralName);
+    this._prepareHelperName('addSingleHelper', 'add', singularName);
+    this._prepareHelperName('addMultipleHelper', 'add', pluralName);
+    this._prepareHelperName('removeSingleHelper', 'remove', singularName);
+    this._prepareHelperName('removeMultipleHelper', 'remove', pluralName);
     this._prepareAstroClass();
     this._prepareValidators();
+  },
+  getMultipleHelpersDefinition() {
+
   },
   _prepareAstroClass() {
     let { collection } = this.options;
@@ -237,7 +240,7 @@ Behavior.create({
       this.options[optionName] = prefix + suffix;
     }
   },
-  _prepareMethodName(optionName, prefix, suffix = '') {
+  _prepareHelperName(optionName, prefix, suffix = '') {
     this._prepareName(optionName, prefix, this._capitalize(suffix));
   },
   _capitalize(string) {
