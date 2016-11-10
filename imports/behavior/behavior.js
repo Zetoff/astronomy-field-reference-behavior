@@ -56,7 +56,7 @@ Behavior.create({
           validators: validators,
         },
       },
-      methods: {},
+      helpers: {},
       events: {
         beforeSave(e) {
           const { currentTarget: doc} = e;
@@ -71,7 +71,7 @@ Behavior.create({
 
     if (multiple) {
       // add methods
-      Object.assign(definition.methods, {
+      Object.assign(definition.helpers, {
         [setMethod](ids) {
           const doc = this;
           if (!_.isArray(ids)) {
@@ -143,7 +143,7 @@ Behavior.create({
       });
     } else {
       // add methods
-      Object.assign(definition.methods, {
+      Object.assign(definition.helpers, {
         [setMethod](id) {
           const doc = this;
           if (_.isObject(id)) {
@@ -164,8 +164,8 @@ Behavior.create({
     Class.extend(this.createClassDefinition(), [
       'fields',
       'validators',
-      'methods',
-      'events'
+      'helpers',
+      'events',
     ]);
   },
   beforePrepareOptions() {
