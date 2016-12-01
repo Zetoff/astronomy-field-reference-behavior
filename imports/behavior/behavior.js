@@ -15,13 +15,13 @@ Behavior.create({
     singularName: 'docRef',
     pluralName: 'docRefs',
     fieldName: null,
-    getSingleMethod: null,
-    getMultipleMethod: null,
-    setMethod: null,
-    addSingleMethod: null,
-    addMultipleMethod: null,
-    removeSingleMethod: null,
-    removeMultipleMethod: null,
+    getSingleHelper: null,
+    getMultipleHelper: null,
+    setHelper: null,
+    addSingleHelper: null,
+    addMultipleHelper: null,
+    removeSingleHelper: null,
+    removeMultipleHelper: null,
     optional: false,
     multiple: false,
     unique: true,
@@ -35,14 +35,6 @@ Behavior.create({
 
     const {
       fieldName,
-      getSingleMethod,
-      getMultipleMethod,
-      setMethod,
-      addSingleMethod,
-      addMultipleMethod,
-      removeSingleMethod,
-      removeMultipleMethod,
-      collection,
       multiple,
       unique,
       validators,
@@ -54,6 +46,10 @@ Behavior.create({
           type: [String],
           optional: this.options.optional,
           validators: validators,
+          cast(value) {
+            // wrap into an array
+            return _.isArray(value) ? value : [ value ];
+          },
         },
       },
       methods: {},
@@ -70,92 +66,9 @@ Behavior.create({
     };
 
     if (multiple) {
-      // add methods
-      Object.assign(definition.methods, {
-        [setMethod](ids) {
-          const doc = this;
-          if (!_.isArray(ids)) {
-            ids = ids ? [ids] : undefined;
-          }
-          if (_.isArray(ids)) {
-            ids = _.map(ids, (id) => {
-              return _.isObject(id) ? id._id : id;
-            });
-          }
-          doc[fieldName] = ids;
-        },
-        [getSingleMethod](id) {
-          check(id, String);
-          return getReferencedDocument(collection, id);
-        },
-        [getMultipleMethod](ids) {
-          const doc = this;
-          if (ids) {
-            if (!_.isArray(ids)) {
-              ids = [ids];
-            }
-          }
-          return collection.find({
-            _id: {
-              '$in': (ids ? ids : doc[fieldName])
-            }
-          });
-        },
-        [addSingleMethod](id) {
-          const doc = this;
-          if (_.isObject(id)) {
-            id = id._id;
-          }
-          if (unique && _.includes(doc[fieldName], id)) {
-            // do not add
-          } else {
-            if (!_.isArray(doc[fieldName])) {
-              doc[fieldName] = [];
-            }
-            doc[fieldName].push(id);
-          }
-        },
-        [addMultipleMethod](ids) {
-          const doc = this;
-          if (!_.isArray(ids)) {
-            ids = [ids];
-          }
-          _.forEach(ids, doc[addSingleMethod].bind(doc));
-        },
-        [removeSingleMethod](id) {
-          const doc = this;
-          if (_.isObject(id)) {
-            id = id._id;
-          }
-          if (doc[fieldName]) {
-            doc[fieldName] = _.filter(doc[fieldName], (refId) => {
-              return refId !== id;
-            });
-          }
-        },
-        [removeMultipleMethod](ids) {
-          const doc = this;
-          if (!_.isArray(ids)) {
-            ids = [ids];
-          }
-          _.forEach(ids, doc[removeSingleMethod].bind(doc));
-        },
-      });
+      Object.assign(definition.methods, this.getMultipleHelpersDefinition());
     } else {
-      // add methods
-      Object.assign(definition.methods, {
-        [setMethod](id) {
-          const doc = this;
-          if (_.isObject(id)) {
-            id = id._id;
-          }
-          doc[fieldName] = id ? [id] : undefined;
-        },
-        [getSingleMethod]() {
-          const doc = this;
-          return getReferencedDocument(collection, _.head(doc[fieldName]));
-        },
-      })
+      Object.assign(definition.methods, this.getSingleHelpersDefinition())
     }
 
     return definition;
@@ -165,7 +78,7 @@ Behavior.create({
       'fields',
       'validators',
       'methods',
-      'events'
+      'events',
     ]);
   },
   beforePrepareOptions() {
@@ -187,15 +100,122 @@ Behavior.create({
   prepareOptions() {
     const { singularName, pluralName, multiple } = this.options;
     this._prepareName('fieldName', multiple ? pluralName : singularName);
-    this._prepareMethodName('setMethod', 'set', multiple ? pluralName : singularName);
-    this._prepareMethodName('getSingleMethod', 'get', singularName);
-    this._prepareMethodName('getMultipleMethod', 'get', pluralName);
-    this._prepareMethodName('addSingleMethod', 'add', singularName);
-    this._prepareMethodName('addMultipleMethod', 'add', pluralName);
-    this._prepareMethodName('removeSingleMethod', 'remove', singularName);
-    this._prepareMethodName('removeMultipleMethod', 'remove', pluralName);
+    this._prepareHelperName('setHelper', 'set', multiple ? pluralName : singularName);
+    this._prepareHelperName('getSingleHelper', 'get', singularName);
+    this._prepareHelperName('getMultipleHelper', 'get', pluralName);
+    this._prepareHelperName('addSingleHelper', 'add', singularName);
+    this._prepareHelperName('addMultipleHelper', 'add', pluralName);
+    this._prepareHelperName('removeSingleHelper', 'remove', singularName);
+    this._prepareHelperName('removeMultipleHelper', 'remove', pluralName);
     this._prepareAstroClass();
     this._prepareValidators();
+  },
+  getMultipleHelpersDefinition() {
+    const {
+      fieldName,
+      getSingleHelper,
+      getMultipleHelper,
+      setHelper,
+      addSingleHelper,
+      addMultipleHelper,
+      removeSingleHelper,
+      removeMultipleHelper,
+      collection,
+      unique,
+    } = this.options;
+
+    return {
+      [setHelper](ids) {
+        const doc = this;
+        if (!_.isArray(ids)) {
+          ids = ids ? [ids] : undefined;
+        }
+        if (_.isArray(ids)) {
+          ids = _.map(ids, (id) => {
+            return _.isObject(id) ? id._id : id;
+          });
+        }
+        doc[fieldName] = ids;
+      },
+      [getSingleHelper](id) {
+        check(id, String);
+        return getReferencedDocument(collection, id);
+      },
+      [getMultipleHelper](ids) {
+        const doc = this;
+        if (ids) {
+          if (!_.isArray(ids)) {
+            ids = [ids];
+          }
+        }
+        return collection.find({
+          _id: {
+            '$in': (ids ? ids : doc[fieldName])
+          }
+        });
+      },
+      [addSingleHelper](id) {
+        const doc = this;
+        if (_.isObject(id)) {
+          id = id._id;
+        }
+        if (unique && _.includes(doc[fieldName], id)) {
+          // do not add
+        } else {
+          if (!_.isArray(doc[fieldName])) {
+            doc[fieldName] = [];
+          }
+          doc[fieldName].push(id);
+        }
+      },
+      [addMultipleHelper](ids) {
+        const doc = this;
+        if (!_.isArray(ids)) {
+          ids = [ids];
+        }
+        _.forEach(ids, doc[addSingleHelper].bind(doc));
+      },
+      [removeSingleHelper](id) {
+        const doc = this;
+        if (_.isObject(id)) {
+          id = id._id;
+        }
+        if (doc[fieldName]) {
+          doc[fieldName] = _.filter(doc[fieldName], (refId) => {
+            return refId !== id;
+          });
+        }
+      },
+      [removeMultipleHelper](ids) {
+        const doc = this;
+        if (!_.isArray(ids)) {
+          ids = [ids];
+        }
+        _.forEach(ids, doc[removeSingleHelper].bind(doc));
+      },
+    }
+  },
+  getSingleHelpersDefinition() {
+    const {
+      fieldName,
+      getSingleHelper,
+      setHelper,
+      collection,
+    } = this.options;
+
+    return {
+      [setHelper](id) {
+        const doc = this;
+        if (_.isObject(id)) {
+          id = id._id;
+        }
+        doc[fieldName] = id ? [id] : undefined;
+      },
+      [getSingleHelper]() {
+        const doc = this;
+        return getReferencedDocument(collection, _.head(doc[fieldName]));
+      },
+    };
   },
   _prepareAstroClass() {
     let { collection } = this.options;
@@ -208,11 +228,23 @@ Behavior.create({
     if (!_.isArray(this.options.validators)) {
       this.options.validators = [];
     }
-    const { multiple, validators, collection } = this.options;
+    const {
+      multiple,
+      optional,
+      validators,
+      collection,
+    } = this.options;
+
     validators.unshift({
       type: Constants.REFERENCES_EXISTS_NAME,
       param: collection,
     });
+    if (!optional) {
+      validators.unshift({
+        type: 'minLength',
+        param: 1,
+      });
+    }
     if (!multiple) {
       validators.unshift({
         type: 'maxLength',
@@ -225,7 +257,7 @@ Behavior.create({
       this.options[optionName] = prefix + suffix;
     }
   },
-  _prepareMethodName(optionName, prefix, suffix = '') {
+  _prepareHelperName(optionName, prefix, suffix = '') {
     this._prepareName(optionName, prefix, this._capitalize(suffix));
   },
   _capitalize(string) {
