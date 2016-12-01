@@ -46,6 +46,10 @@ Behavior.create({
           type: [String],
           optional: this.options.optional,
           validators: validators,
+          cast(value) {
+            // wrap into an array
+            return _.isArray(value) ? value : [ value ];
+          },
         },
       },
       helpers: {},
