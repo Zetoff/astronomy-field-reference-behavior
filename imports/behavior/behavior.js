@@ -52,7 +52,7 @@ Behavior.create({
           },
         },
       },
-      helpers: {},
+      methods: {},
       events: {
         beforeSave(e) {
           const { currentTarget: doc} = e;
@@ -66,9 +66,9 @@ Behavior.create({
     };
 
     if (multiple) {
-      Object.assign(definition.helpers, this.getMultipleHelpersDefinition());
+      Object.assign(definition.methods, this.getMultipleHelpersDefinition());
     } else {
-      Object.assign(definition.helpers, this.getSingleHelpersDefinition())
+      Object.assign(definition.methods, this.getSingleHelpersDefinition())
     }
 
     return definition;
@@ -77,7 +77,7 @@ Behavior.create({
     Class.extend(this.createClassDefinition(), [
       'fields',
       'validators',
-      'helpers',
+      'methods',
       'events',
     ]);
   },
