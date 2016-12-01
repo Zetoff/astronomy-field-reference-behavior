@@ -14,7 +14,7 @@ describe('zetoff:astronomy-field-reference-behavior', function() {
     createAstroClass(createCategory);
     hasBehavior(className, fieldReference);
     populateCategory();
-    describe('methods', function() {
+    describe('helpers', function() {
       it('set', function() {
         const basketball = AstroClass.get(className).findOne({_id: 'basketball'});
         chai.expect(basketball.setParentCategory).to.be.a('function');
@@ -35,7 +35,7 @@ describe('zetoff:astronomy-field-reference-behavior', function() {
     createAstroClass(createNews);
     hasBehavior(className, fieldReference);
     populateNews();
-    describe('methods', function() {
+    describe('helpers', function() {
       it('set', function() {
         const id = AstroClass.get(className).insert({name: 'Set test news'});
         const news = AstroClass.get(className).findOne({_id: id});
@@ -55,8 +55,8 @@ describe('zetoff:astronomy-field-reference-behavior', function() {
           name: 'Add test news',
         });
         const news = AstroClass.get(className).findOne({_id: id});
-        chai.expect(news.addCategory, `add single method`).to.be.a('function');
-        chai.expect(news.addCategories, `add multiple method`).to.be.a('function');
+        chai.expect(news.addCategory, `add single helper`).to.be.a('function');
+        chai.expect(news.addCategories, `add multiple helper`).to.be.a('function');
         chai.expect(() => news.addCategory('sport'), `add single category`).to.not.throw();
         chai.expect(news.categories, `when adding a first category the array should be created`).to.be.an('array');
         chai.assert.equal(news.categories.length, 1, `there should be only one category`);
@@ -73,16 +73,16 @@ describe('zetoff:astronomy-field-reference-behavior', function() {
           categories: ['sport', 'international', 'economy'],
         });
         const news = AstroClass.get(className).findOne({_id: id});
-        chai.expect(news.removeCategory, `remove single method`).to.be.a('function');
-        chai.expect(news.removeCategories, `remove multiple method`).to.be.a('function');
+        chai.expect(news.removeCategory, `remove single helper`).to.be.a('function');
+        chai.expect(news.removeCategories, `remove multiple helper`).to.be.a('function');
         chai.expect(() => news.removeCategory('invalid category'), `remove single invalid category`).to.not.throw();
-        chai.expect(news.categories, `remove method should always result in array`).to.be.an('array');
+        chai.expect(news.categories, `remove helper should always result in array`).to.be.an('array');
         chai.assert.equal(news.categories.length, 3, `should have not removed any category`);
         chai.expect(() => news.removeCategory('sport'), `remove single category`).to.not.throw();
-        chai.expect(news.categories, `remove method should always result in array`).to.be.an('array');
+        chai.expect(news.categories, `remove helper should always result in array`).to.be.an('array');
         chai.assert.equal(news.categories.length, 2, `should have removed the category`);
         chai.expect(() => news.removeCategories(['international', 'economy']), `remove multiple categories`).to.not.throw();
-        chai.expect(news.categories, `remove method should always result in array`).to.be.an('array');
+        chai.expect(news.categories, `remove helper should always result in array`).to.be.an('array');
         chai.assert.equal(news.categories.length, 0, `there should be no categories left`);
       });
     });
