@@ -2,12 +2,13 @@ import { check, Match } from 'meteor/check';
 import { Class as AstroClass, Behavior, Validators } from 'meteor/jagi:astronomy';
 
 import * as Constants from '../constants';
-
-function getReferencedDocument(collection, refId) {
-  return collection.findOne({
-    _id: refId,
-  });
-}
+import {
+  curryGetReferencedDocument,
+  curryGetReferencedDocuments,
+  currySetReference,
+  currySetReferences,
+  getIds,
+} from '../utils';
 
 Behavior.create({
   name: Constants.BEHAVIOR_NAME,
@@ -125,35 +126,9 @@ Behavior.create({
     } = this.options;
 
     return {
-      [setHelper](ids) {
-        const doc = this;
-        if (!_.isArray(ids)) {
-          ids = ids ? [ids] : undefined;
-        }
-        if (_.isArray(ids)) {
-          ids = _.map(ids, (id) => {
-            return _.isObject(id) ? id._id : id;
-          });
-        }
-        doc[fieldName] = ids;
-      },
-      [getSingleHelper](id) {
-        check(id, String);
-        return getReferencedDocument(collection, id);
-      },
-      [getMultipleHelper](ids) {
-        const doc = this;
-        if (ids) {
-          if (!_.isArray(ids)) {
-            ids = [ids];
-          }
-        }
-        return collection.find({
-          _id: {
-            '$in': (ids ? ids : doc[fieldName])
-          }
-        });
-      },
+      [setHelper]: currySetReferences(fieldName),
+      [getSingleHelper]: curryGetReferencedDocument(fieldName, collection),
+      [getMultipleHelper]: curryGetReferencedDocuments(fieldName, collection),
       [addSingleHelper](id) {
         const doc = this;
         if (_.isObject(id)) {
@@ -204,17 +179,8 @@ Behavior.create({
     } = this.options;
 
     return {
-      [setHelper](id) {
-        const doc = this;
-        if (_.isObject(id)) {
-          id = id._id;
-        }
-        doc[fieldName] = id ? [id] : undefined;
-      },
-      [getSingleHelper]() {
-        const doc = this;
-        return getReferencedDocument(collection, _.head(doc[fieldName]));
-      },
+      [setHelper]: currySetReference(fieldName),
+      [getSingleHelper]: curryGetReferencedDocument(fieldName, collection),
     };
   },
   _prepareAstroClass() {
