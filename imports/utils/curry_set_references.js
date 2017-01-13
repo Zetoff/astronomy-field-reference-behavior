@@ -1,4 +1,7 @@
 import _ from 'lodash';
+import {
+  flow,
+} from 'lodash/fp';
 
 import getIds from './get_ids';
 
