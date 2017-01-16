@@ -1,6 +1,7 @@
 import { chai } from 'meteor/practicalmeteor:chai';
 import { Class as AstroClass } from 'meteor/jagi:astronomy';
 import { behaviorName as fieldReference } from 'meteor/zetoff:astronomy-field-reference-behavior';
+import _ from 'lodash';
 
 import { createCategory, createNews } from './tests/create_astro_class';
 import { populateCategory, populateNews } from './tests/data';
@@ -21,10 +22,13 @@ describe('zetoff:astronomy-field-reference-behavior', function() {
         chai.expect(() => basketball.setParentCategory('sport')).to.not.throw();
         chai.expect(basketball.parentCategory).to.be.an('array');
         chai.assert.equal(basketball.parentCategory.length, 1);
-        chai.expect(() => basketball.setParentCategory(['sport', 'international'])).to.not.throw();
-        chai.expect(basketball.parentCategory).to.be.a('undefined');
+        chai.assert.equal(_.head(basketball.parentCategory), 'sport');
         chai.expect(() => basketball.setParentCategory()).to.not.throw();
         chai.expect(basketball.parentCategory).to.be.a('undefined');
+        chai.expect(() => basketball.setParentCategory(['sport', 'international'])).to.not.throw();
+        chai.expect(basketball.parentCategory).to.be.an('array');
+        chai.assert.equal(basketball.parentCategory.length, 1);
+        chai.assert.equal(_.head(basketball.parentCategory), 'sport');
       });
       // TODO get
     });
@@ -43,11 +47,11 @@ describe('zetoff:astronomy-field-reference-behavior', function() {
         chai.expect(() => news.setCategories('sport')).to.not.throw();
         chai.expect(news.categories).to.be.an('array');
         chai.assert.equal(news.categories.length, 1);
+        chai.expect(() => news.setCategories()).to.not.throw();
+        chai.expect(news.categories).to.be.a('undefined');
         chai.expect(() => news.setCategories(['sport', 'international'])).to.not.throw();
         chai.expect(news.categories).to.be.an('array');
         chai.assert.equal(news.categories.length, 2);
-        chai.expect(() => news.setCategories()).to.not.throw();
-        chai.expect(news.categories).to.be.a('undefined');
       });
       // TODO get
       it('add', function() {

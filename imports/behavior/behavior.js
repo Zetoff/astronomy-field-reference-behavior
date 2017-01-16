@@ -1,13 +1,20 @@
 import { check, Match } from 'meteor/check';
 import { Class as AstroClass, Behavior, Validators } from 'meteor/jagi:astronomy';
+import _ from 'lodash';
+import {
+  flow,
+  map,
+} from 'lodash/fp';
 
 import * as Constants from '../constants';
-
-function getReferencedDocument(collection, refId) {
-  return collection.findOne({
-    _id: refId,
-  });
-}
+import {
+  curryGetReferencedDocument,
+  curryGetReferencedDocuments,
+  currySetReference,
+  currySetReferences,
+  getId,
+  getIds,
+} from '../utils';
 
 Behavior.create({
   name: Constants.BEHAVIOR_NAME,
@@ -125,40 +132,13 @@ Behavior.create({
     } = this.options;
 
     return {
-      [setHelper](ids) {
+      [setHelper]: currySetReferences(fieldName),
+      [getSingleHelper]: curryGetReferencedDocument(fieldName, collection),
+      [getMultipleHelper]: curryGetReferencedDocuments(fieldName, collection),
+      [addSingleHelper](idOrDoc) {
+        idOrDoc = _.isArray(idOrDoc) ? _.head(idOrDoc) : idOrDoc;
         const doc = this;
-        if (!_.isArray(ids)) {
-          ids = ids ? [ids] : undefined;
-        }
-        if (_.isArray(ids)) {
-          ids = _.map(ids, (id) => {
-            return _.isObject(id) ? id._id : id;
-          });
-        }
-        doc[fieldName] = ids;
-      },
-      [getSingleHelper](id) {
-        check(id, String);
-        return getReferencedDocument(collection, id);
-      },
-      [getMultipleHelper](ids) {
-        const doc = this;
-        if (ids) {
-          if (!_.isArray(ids)) {
-            ids = [ids];
-          }
-        }
-        return collection.find({
-          _id: {
-            '$in': (ids ? ids : doc[fieldName])
-          }
-        });
-      },
-      [addSingleHelper](id) {
-        const doc = this;
-        if (_.isObject(id)) {
-          id = id._id;
-        }
+        const id = getId(idOrDoc);
         if (unique && _.includes(doc[fieldName], id)) {
           // do not add
         } else {
@@ -168,30 +148,28 @@ Behavior.create({
           doc[fieldName].push(id);
         }
       },
-      [addMultipleHelper](ids) {
+      [addMultipleHelper](idsOrDocs) {
         const doc = this;
-        if (!_.isArray(ids)) {
-          ids = [ids];
-        }
-        _.forEach(ids, doc[addSingleHelper].bind(doc));
+        flow(
+          _.castArray,
+          getIds,
+          _.compact,
+          map(doc[addSingleHelper].bind(doc))
+        )(idsOrDocs);
       },
-      [removeSingleHelper](id) {
+      [removeSingleHelper](idOrDoc) {
+        idOrDoc = _.isArray(idOrDoc) ? _.head(idOrDoc) : idOrDoc;
         const doc = this;
-        if (_.isObject(id)) {
-          id = id._id;
-        }
-        if (doc[fieldName]) {
-          doc[fieldName] = _.filter(doc[fieldName], (refId) => {
-            return refId !== id;
-          });
-        }
+        _.pull(doc[fieldName], getId(idOrDoc));
       },
-      [removeMultipleHelper](ids) {
+      [removeMultipleHelper](idsOrDocs) {
         const doc = this;
-        if (!_.isArray(ids)) {
-          ids = [ids];
-        }
-        _.forEach(ids, doc[removeSingleHelper].bind(doc));
+        flow(
+          _.castArray,
+          getIds,
+          _.compact,
+          map(doc[removeSingleHelper].bind(doc))
+        )(idsOrDocs);
       },
     }
   },
@@ -204,17 +182,8 @@ Behavior.create({
     } = this.options;
 
     return {
-      [setHelper](id) {
-        const doc = this;
-        if (_.isObject(id)) {
-          id = id._id;
-        }
-        doc[fieldName] = id ? [id] : undefined;
-      },
-      [getSingleHelper]() {
-        const doc = this;
-        return getReferencedDocument(collection, _.head(doc[fieldName]));
-      },
+      [setHelper]: currySetReference(fieldName),
+      [getSingleHelper]: curryGetReferencedDocument(fieldName, collection),
     };
   },
   _prepareAstroClass() {
