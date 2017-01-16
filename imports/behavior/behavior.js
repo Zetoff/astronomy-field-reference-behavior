@@ -157,23 +157,19 @@ Behavior.create({
           map(doc[addSingleHelper].bind(doc))
         )(idsOrDocs);
       },
-      [removeSingleHelper](id) {
+      [removeSingleHelper](idOrDoc) {
+        idOrDoc = _.isArray(idOrDoc) ? _.head(idOrDoc) : idOrDoc;
         const doc = this;
-        if (_.isObject(id)) {
-          id = id._id;
-        }
-        if (doc[fieldName]) {
-          doc[fieldName] = _.filter(doc[fieldName], (refId) => {
-            return refId !== id;
-          });
-        }
+        _.pull(doc[fieldName], getId(idOrDoc));
       },
-      [removeMultipleHelper](ids) {
+      [removeMultipleHelper](idsOrDocs) {
         const doc = this;
-        if (!_.isArray(ids)) {
-          ids = [ids];
-        }
-        _.forEach(ids, doc[removeSingleHelper].bind(doc));
+        flow(
+          _.castArray,
+          getIds,
+          _.compact,
+          map(doc[removeSingleHelper].bind(doc))
+        )(idsOrDocs);
       },
     }
   },
