@@ -1,5 +1,10 @@
 import { check, Match } from 'meteor/check';
 import { Class as AstroClass, Behavior, Validators } from 'meteor/jagi:astronomy';
+import _ from 'lodash';
+import {
+  flow,
+  map,
+} from 'lodash/fp';
 
 import * as Constants from '../constants';
 import {
@@ -7,6 +12,7 @@ import {
   curryGetReferencedDocuments,
   currySetReference,
   currySetReferences,
+  getId,
   getIds,
 } from '../utils';
 
@@ -129,11 +135,10 @@ Behavior.create({
       [setHelper]: currySetReferences(fieldName),
       [getSingleHelper]: curryGetReferencedDocument(fieldName, collection),
       [getMultipleHelper]: curryGetReferencedDocuments(fieldName, collection),
-      [addSingleHelper](id) {
+      [addSingleHelper](idOrDoc) {
+        idOrDoc = _.isArray(idOrDoc) ? _.head(idOrDoc) : idOrDoc;
         const doc = this;
-        if (_.isObject(id)) {
-          id = id._id;
-        }
+        const id = getId(idOrDoc);
         if (unique && _.includes(doc[fieldName], id)) {
           // do not add
         } else {
@@ -143,12 +148,14 @@ Behavior.create({
           doc[fieldName].push(id);
         }
       },
-      [addMultipleHelper](ids) {
+      [addMultipleHelper](idsOrDocs) {
         const doc = this;
-        if (!_.isArray(ids)) {
-          ids = [ids];
-        }
-        _.forEach(ids, doc[addSingleHelper].bind(doc));
+        flow(
+          _.castArray,
+          getIds,
+          _.compact,
+          map(doc[addSingleHelper].bind(doc))
+        )(idsOrDocs);
       },
       [removeSingleHelper](id) {
         const doc = this;
