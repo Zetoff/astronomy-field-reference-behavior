@@ -1,30 +1,56 @@
-import { Class as AstroClass, Validator } from 'meteor/jagi:astronomy';
+import _ from 'lodash';
+import { Validator } from 'meteor/jagi:astronomy';
 
-import * as Constants from '../constants';
+import { REFERENCES_EXISTS_NAME } from '../constants';
+
+const defaultValueQuery = refValue => refValue;
+
+const getParams = (param) => {
+  if (_.isPlainObject(param)) {
+    return {
+      referencedField: '_id',
+      valueQuery: defaultValueQuery,
+      ..._.pickBy(param),
+    };
+  } else {
+    return { collection: param };
+  }
+};
 
 export default Validator.create({
-  name: Constants.REFERENCES_EXISTS_NAME,
+  name: REFERENCES_EXISTS_NAME,
   isValid({
-    value: refIds,
-    param: collection
+    value,
+    param,
   }) {
-    if (!_.isArray(refIds)) {
-      refIds = [refIds];
-    }
-    return _.every(refIds, (refId) => {
+    const {
+      collection,
+      referencedField,
+      valueQuery,
+    } = getParams(param);
+
+    const refValues = _.castArray(value);
+    return _.every(refValues, (refValue) => {
       // store id. If document is not found _.every will stop and that
       // id will be available from resolveError method
-      this._refId = refId;
-      return collection.findOne({
-        _id: refId,
-      });
+      this.refValue = refValue;
+      return collection.findOne({ [referencedField]: valueQuery(refValue) });
     });
   },
   resolveError({
     doc,
     name,
+    param,
   }) {
-    return `Could not assign ${doc.constructor.getName()}.${name} ` +
-      `because no document was found with id '${this._refId}'.`;
-  }
+    const {
+      referencedField,
+      valueQuery,
+    } = getParams(param);
+    return `Could not assign ${doc.constructor.getName()}.${name} because no ` +
+      `document was found with field '${referencedField}' ${(
+        valueQuery === defaultValueQuery
+          ? `equal to '${this.refValue}'`
+          : `matching '${JSON.stringify(valueQuery(this.refValue))}'`
+      )}.`;
+  },
 });
