@@ -6,7 +6,10 @@ import {
   map,
 } from 'lodash/fp';
 
-import * as Constants from '../constants';
+import {
+  BEHAVIOR_NAME,
+  REFERENCES_EXISTS_NAME,
+} from '../constants';
 import {
   curryGetReferencedDocument,
   curryGetReferencedDocuments,
@@ -17,7 +20,7 @@ import {
 } from '../utils';
 
 Behavior.create({
-  name: Constants.BEHAVIOR_NAME,
+  name: BEHAVIOR_NAME,
   options: {
     singularName: 'docRef',
     pluralName: 'docRefs',
@@ -33,6 +36,8 @@ Behavior.create({
     multiple: false,
     unique: true,
     collection: null,
+    referencedField: '_id',
+    referenceExistValueQuery: undefined,
     validators: null,
   },
   createClassDefinition() {
@@ -202,11 +207,17 @@ Behavior.create({
       optional,
       validators,
       collection,
+      referencedField,
+      referenceExistValueQuery,
     } = this.options;
 
     validators.unshift({
-      type: Constants.REFERENCES_EXISTS_NAME,
-      param: collection,
+      type: REFERENCES_EXISTS_NAME,
+      param: {
+        collection,
+        referencedField,
+        valueQuery: referenceExistValueQuery,
+      },
     });
     if (!optional) {
       validators.unshift({
