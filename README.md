@@ -74,3 +74,76 @@ value part of the query on the `referencesExist` validator. The function will
  be called for each stored value in the field. Defaults to `value => value`.
 - ```validators {Array}```: accepts an array of validators like any field would.
 
+##Examples
+
+####1. Simple references
+
+We will create a Post class that must have one category and can have up to 5 
+tags.
+
+```js
+// Post.js
+import { Class } from 'meteor/jagi:astronomy';
+import { behaviorName as fieldReference } from 'meteor/zetoff:astronomy-field-reference-behavior';
+
+import Category from './Category';
+import Tag from './Tag';
+
+const Post = Class.create({
+  name: 'Post',
+  behaviors: {
+    [fieldReference]: [
+      {
+        // defines a mandatory `category` field with only one value and
+        // adds `setCategory` and `getCategory` helpers
+        singularName: 'category',
+        collection: Category,
+      },
+      {
+        // defines an optional 'tags' field with a maximum of 5 values and 
+        // adds `setTags`, `getTags`, `addTag` and `removeTag` helpers
+        singularName: 'tag',
+        pluralName: 'tags',
+        multiple: true,
+        optional: true,
+        collection: Tag,
+        validators: [{
+          name: 'maxLength',
+          param: 5,
+        }],
+      },
+    ]
+  },
+});
+```
+
+####2. Own reference
+
+A field of the same Class can also be referenced. We will create a Category 
+class that allows a simple hierarchy by adding a `parentCategory` field that 
+references another category.
+
+```js
+// Category.js
+import { Class } from 'meteor/jagi:astronomy';
+import { behaviorName as fieldReference } from 'meteor/zetoff:astronomy-field-reference-behavior';
+
+export default Class.create({
+  name: 'Category',
+  behaviors: {
+    [fieldReference]: {
+      // defines an optional `parentCategory` field with only one value and
+      // adds `setParentCategory` and `getParentCategory` helpers
+      singularName: 'parentCategory',
+      optional: true,
+      // Category does not exist in this scope, but it will once the field 
+      // reference is created, so it will loaded by name using Class.get()
+      collection: 'Category',
+      validators: [
+        // in this specific case, a custom validator should be implemented to 
+        // prevent a category from referencing itself 
+      ],
+    },
+  },
+});
+```
