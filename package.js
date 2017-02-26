@@ -1,12 +1,12 @@
 Package.describe({
   name: 'zetoff:astronomy-field-reference-behavior',
-  version: '0.4.1',
+  version: '0.5.0',
   summary: 'Adds a field to an astronomy class that references to other documents.',
   git: 'https://github.com/Zetoff/astronomy-field-reference-behavior',
   documentation: 'README.md'
 });
 
-Package.onUse(function(api) {
+Package.onUse((api) => {
   api.versionsFrom('1.3.4.4');
   api.use('ecmascript');
   api.use('jagi:astronomy@2.3.10');
@@ -14,7 +14,7 @@ Package.onUse(function(api) {
   api.mainModule('astronomy-field-reference-behavior.js');
 });
 
-Package.onTest(function(api) {
+Package.onTest((api) => {
   api.use('ecmascript');
   api.use('mongo');
   api.use('practicalmeteor:mocha');
